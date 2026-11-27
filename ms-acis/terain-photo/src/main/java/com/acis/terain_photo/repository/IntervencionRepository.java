@@ -1,0 +1,1 @@
+package com.acis.terain_photo.repository;import com.acis.terain_photo.model.Intervencion;import org.springframework.data.jpa.repository.JpaRepository;import java.util.*;public interface IntervencionRepository extends JpaRepository<Intervencion,Long>{Optional<Intervencion> findByCodigoOt(String codigoOt);Optional<Intervencion> findByFotoEvidencia(String name);}

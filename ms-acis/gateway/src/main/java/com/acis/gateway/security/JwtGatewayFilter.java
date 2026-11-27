@@ -1,0 +1,10 @@
+package com.acis.gateway.security;
+import io.jsonwebtoken.Jwts;import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;import org.springframework.cloud.gateway.filter.*;import org.springframework.core.Ordered;import org.springframework.http.*;import org.springframework.http.server.reactive.ServerHttpRequest;import org.springframework.stereotype.Component;import org.springframework.web.server.ServerWebExchange;import reactor.core.publisher.Mono;import javax.crypto.SecretKey;import java.nio.charset.StandardCharsets;import java.util.Set;
+@Component public class JwtGatewayFilter implements GlobalFilter, Ordered {
+ private static final Set<String> PUBLIC=Set.of("/api/auth/login","/api/auth/register","/api/auth/recuperar-clave","/api/auth/restablecer-clave"); private final SecretKey key;
+ public JwtGatewayFilter(@Value("${jwt.secret}") String secret){key=Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));}
+ @Override public int getOrder(){return -1;}
+ @Override public Mono<Void> filter(ServerWebExchange ex,GatewayFilterChain chain){var req=ex.getRequest();if(req.getMethod()==HttpMethod.OPTIONS||PUBLIC.contains(req.getURI().getPath()))return chain.filter(ex);String h=req.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);if(h==null||!h.startsWith("Bearer "))return reject(ex,"Token requerido");try{var claims=Jwts.parser().verifyWith(key).build().parseSignedClaims(h.substring(7)).getPayload();String email=claims.get("email",String.class),rol=claims.get("rol",String.class);if(email==null||rol==null)return reject(ex,"Token inválido");ServerHttpRequest mutated=req.mutate().header("X-Auth-Email",email).header("X-Auth-Rol",rol).build();return chain.filter(ex.mutate().request(mutated).build());}catch(Exception e){return reject(ex,"Token inválido o expirado");}}
+ private Mono<Void> reject(ServerWebExchange ex,String msg){var res=ex.getResponse();res.setStatusCode(HttpStatus.UNAUTHORIZED);res.getHeaders().setContentType(MediaType.APPLICATION_JSON);byte[] body=("{\"status\":401,\"mensaje\":\""+msg+"\"}").getBytes(StandardCharsets.UTF_8);return res.writeWith(Mono.just(res.bufferFactory().wrap(body)));}
+}

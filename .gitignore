@@ -1,0 +1,20 @@
+﻿# Archivos generados y configuracion local
+target/
+build/
+.vscode/
+.idea/
+*.log
+
+# Credenciales locales
+.env
+.env.*
+!.env.example
+!.env.sample
+*.pem
+*.key
+
+# Datos locales y evidencias cargadas
+data/
+uploads/
+*.mv.db
+*.trace.db

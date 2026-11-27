@@ -1,0 +1,1 @@
+package com.acis.terain_photo.dto;import jakarta.validation.constraints.NotBlank;public record InformeRequest(@NotBlank String codigoOt,@NotBlank String diagnostico,@NotBlank String actividad,String materiales){}
